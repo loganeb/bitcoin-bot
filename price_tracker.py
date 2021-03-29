@@ -50,7 +50,7 @@ def calc_cumulative_volume(price_volume_list):
 def get_open_time_utc_milliseconds():
     six_am = (datetime
                 .now(dateutil.tz.gettz('America/Denver'))
-                .replace(hour=6, minute=0, second=0, microsecond=0)
+                .replace(hour=0, minute=0, second=0, microsecond=0)
                 .astimezone(dateutil.tz.tzutc()))
     return math.floor(six_am.timestamp())*1000
 
