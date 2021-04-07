@@ -86,8 +86,8 @@ def sell(headers, symbol, qty):
     return return_usd
 
 def log_trade(file_path, string):
-    with open(file_path) as log_file:
-        log_file.write(string)
+    with open(file_path, 'a+') as log_file:
+        log_file.write(string + '\n')
 
 # vwap = [dp['vwap'] for dp in pvl]
 # plot_vwap(data, vwap)
@@ -114,18 +114,23 @@ def main():
             if pvl[-1]['close'] >= pvl[-1]['vwap'] and pvl[-2]['close'] >= pvl[-2]['vwap']:
                 entry_price = get_avg_price(headers, 'BTCUSDT')
                 open_qty = buy(headers, 'BTCUSDT', 20.00)
+                now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+                log_trade('trades.log', '{} - Position {} opened - {} {} bought at ${} for ${}'.format(
+                    now, trade_count, open_qty, 'BTCUDST', entry_price, 20.00
+                ))
                 position_open = True
         elif position_open:
             if pvl[-1]['close'] < pvl[-1]['vwap'] or (entry_price - pvl[-1]['close']) / entry_price > 0.02:
                 exit_price = get_avg_price(headers, 'BTCUSDT')
                 return_pct = ((exit_price - entry_price)/entry_price)*100
                 now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-                log_trade('trades.log', '{} - Position opened at ${} and closed at ${} for {}% return'.format(
-                    now, entry_price, exit_price, return_pct
+                sell(headers, 'BTCUSDT', open_qty)
+                log_trade('trades.log', '{} - Position {} closed at ${} for {}% return'.format(
+                    now, trade_count, exit_price, return_pct
                 ))
                 trade_count += 1
                 position_open = False
-        time.sleep(60)
+        time.sleep(30)
 
 
 if __name__ == "__main__":
