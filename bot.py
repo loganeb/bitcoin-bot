@@ -3,8 +3,10 @@ import requests
 import math
 import dateutil.tz
 from datetime import datetime, timezone
+import distutils
 import plotly.graph_objects as go
 import time
+import state
 
 ONE_MINUTE = '1m'
 FIVE_MINUTES = '5m'
@@ -100,7 +102,7 @@ def main():
         'X-MBX-APIKEY': config['api_key']
     }
 
-    position_open = False
+    state.set_position_open(False)
     entry_price = 0
     exit_price = 0
     open_qty = 0
@@ -110,7 +112,7 @@ def main():
         day_open = get_open_time_utc_milliseconds()
         data = get_candlestick_data(headers, 'BTCUSDT', FIVE_MINUTES, day_open)
         pvl = calc_vwap(data)
-        if not position_open:
+        if not state.get_position_open() == "True":
             if pvl[-1]['close'] >= pvl[-1]['vwap'] and pvl[-2]['close'] >= pvl[-2]['vwap']:
                 entry_price = get_avg_price(headers, 'BTCUSDT')
                 open_qty = buy(headers, 'BTCUSDT', 20.00)
@@ -118,9 +120,9 @@ def main():
                 log_trade('trades.log', '{} - Position {} opened - {} {} bought at ${} for ${}'.format(
                     now, trade_count, open_qty, 'BTCUDST', entry_price, 20.00
                 ))
-                position_open = True
-        elif position_open:
-            if pvl[-1]['close'] < pvl[-1]['vwap'] or (entry_price - pvl[-1]['close']) / entry_price > 0.02:
+                state.set_position_open(True)
+        elif state.get_position_open() == "True":
+            if pvl[-1]['close'] < pvl[-1]['vwap'] or (entry_price - pvl[-1]['close']) / entry_price > 0.02 or (pvl[-3]['close'] - pvl[-1]['close']) / pvl[-3]['close'] > 0.04:
                 exit_price = get_avg_price(headers, 'BTCUSDT')
                 return_pct = ((exit_price - entry_price)/entry_price)*100
                 now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -129,7 +131,7 @@ def main():
                     now, trade_count, exit_price, return_pct
                 ))
                 trade_count += 1
-                position_open = False
+                state.set_position_open(False)
         time.sleep(30)
 
 
