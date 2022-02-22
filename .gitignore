@@ -4,4 +4,3 @@ venv/
 *.log
 __pycache__/
 node_modules/*
-public/

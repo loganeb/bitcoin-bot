@@ -1,5 +1,5 @@
-import logo from './logo.svg';
 import './App.css';
+import Body from './Body';
 
 function App() {
   return (
@@ -7,6 +7,7 @@ function App() {
       <header className="App-header">
         <h2>Cryptomatic</h2>
       </header>
+      <Body/>
     </div>
   );
 }
