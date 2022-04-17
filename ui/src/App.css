@@ -30,7 +30,7 @@
 
 .Body {
   /* border: 1px solid green; */
-  width: 200px;
+  width: 100vw;
   margin: 0 auto;
 }
 
@@ -49,5 +49,6 @@ li {
 
 .PositionList {
   background-color: rgb(120,120,120);
-  color: rgb(255,255,255)
+  color: rgb(255,255,255);
+  width: 90%;
 }

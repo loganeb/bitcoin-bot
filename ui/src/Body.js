@@ -9,19 +9,25 @@ class Body extends React.Component {
     }
 
     componentDidMount(){
-        var openPositions = this.getOpenPositions()
-        this.setState({
-            openPositions: openPositions
-        })
+        this.getOpenPositions()
     }
 
     getOpenPositions(){
-        var list = [
-            {symbol: 'ETH', quantity: 0.0003, price: 30000.00}
-        ]
-        return list.map((position) =>
-            <li>{position.quantity}&nbsp;<strong>{position.symbol}</strong>&nbsp; at &nbsp;${position.price}</li>
-        );
+        fetch('http://localhost:5000/openpositions')
+            .then(res => res.json())
+            .then((result) => {
+                let positions = []
+                for(let pos in result){
+                    positions.push(result[pos])
+                }
+                console.log(positions)
+                let map = positions.map((position) =>
+                    <li key={position.entry_time}>{position.quantity}&nbsp;<strong>{position.symbol}</strong>&nbsp; at &nbsp;${position.price}</li>
+                );
+                this.setState({
+                    openPositions: map
+                })
+            })
     }
 
     render(){
