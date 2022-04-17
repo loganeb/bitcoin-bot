@@ -1,4 +1,5 @@
 from flask import Flask
+import json
 import state
 
 app = Flask(__name__)
@@ -9,4 +10,11 @@ def hello_world():
 
 @app.route("/openpositions")
 def get_open_positions():
-    return state.get_position_open()
+    op = state.get_open_positions()
+    res = {}
+    for key in op.keys():
+        res[key] = json.loads(op[key])
+    return res
+
+if __name__ == "__main__":
+    main()

@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 import distutils
 import plotly.graph_objects as go
 import time
+import uuid
+
 import state
 
 ONE_MINUTE = '1m'
@@ -66,7 +68,7 @@ def plot_vwap(raw_data, vwap):
     lows = [dp[3] for dp in raw_data]
     closes = [dp[4] for dp in raw_data]
     fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=dates,open=opens, high=highs, low=lows,close=closes, name='BTCUSDT'))
+    fig.add_trace(go.Candlestick(x=dates,open=opens, high=highs, low=lows,close=closes, name=symbol))
     fig.add_trace(go.Scatter(x=dates, y=vwap, mode='lines', name='VWAP'))
     fig.show()
 
@@ -95,38 +97,41 @@ def log_trade(file_path, string):
 # plot_vwap(data, vwap)
 
 def main():
-    with open('config.json') as config_file:
+    with open('../common/config.json') as config_file:
         config = json.load(config_file)
 
     headers = {
         'X-MBX-APIKEY': config['api_key']
     }
 
+    symbol = config['symbol']
     state.set_position_open(False)
     entry_price = 0
     exit_price = 0
     open_qty = 0
     trade_count = 1
+    position_uuid=str(uuid.uuid4())
 
     while True:
         day_open = get_open_time_utc_milliseconds()
-        data = get_candlestick_data(headers, 'BTCUSDT', FIVE_MINUTES, day_open)
+        data = get_candlestick_data(headers, symbol, FIVE_MINUTES, day_open)
         pvl = calc_vwap(data)
         if not state.get_position_open() == "True":
             if pvl[-1]['close'] >= pvl[-1]['vwap'] and pvl[-2]['close'] >= pvl[-2]['vwap']:
-                entry_price = get_avg_price(headers, 'BTCUSDT')
-                open_qty = buy(headers, 'BTCUSDT', 20.00)
+                entry_price = get_avg_price(headers, symbol)
+                open_qty = buy(headers, symbol, 20.00)
                 now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
                 log_trade('trades.log', '{} - Position {} opened - {} {} bought at ${} for ${}'.format(
                     now, trade_count, open_qty, 'BTCUDST', entry_price, 20.00
                 ))
                 state.set_position_open(True)
+                state.add_open_position(position_uuid, 'BTCUDST', open_qty, now)
         elif state.get_position_open() == "True":
             if pvl[-1]['close'] < pvl[-1]['vwap'] or (entry_price - pvl[-1]['close']) / entry_price > 0.02 or (pvl[-3]['close'] - pvl[-1]['close']) / pvl[-3]['close'] > 0.04:
-                exit_price = get_avg_price(headers, 'BTCUSDT')
+                exit_price = get_avg_price(headers, symbol)
                 return_pct = ((exit_price - entry_price)/entry_price)*100
                 now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-                sell(headers, 'BTCUSDT', open_qty)
+                sell(headers, symbol, open_qty)
                 log_trade('trades.log', '{} - Position {} closed at ${} for {}% return'.format(
                     now, trade_count, exit_price, return_pct
                 ))
