@@ -25,6 +25,10 @@ def add_open_position(uuid, symbol, quantity, entry_time):
     r = initiate_redis()
     r.hset("open_positions",uuid,json.dumps({"symbol":symbol, "quantity":quantity,"entry_time":entry_time}))
 
+def del_open_position(uuid):
+    r = initiate_redis()
+    r.hdel("open_positions",uuid)
+
 def get_open_positions():
     r = initiate_redis()
     return r.hgetall("open_positions")

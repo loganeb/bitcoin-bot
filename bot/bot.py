@@ -110,7 +110,7 @@ def main():
     exit_price = 0
     open_qty = 0
     trade_count = 1
-    position_uuid=str(uuid.uuid4())
+    position_uuid=''
 
     while True:
         day_open = get_open_time_utc_milliseconds()
@@ -122,10 +122,11 @@ def main():
                 open_qty = buy(headers, symbol, 20.00)
                 now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
                 log_trade('trades.log', '{} - Position {} opened - {} {} bought at ${} for ${}'.format(
-                    now, trade_count, open_qty, 'BTCUDST', entry_price, 20.00
+                    now, trade_count, open_qty, symbol, entry_price, 20.00
                 ))
+                position_uuid=str(uuid.uuid4())
                 state.set_position_open(True)
-                state.add_open_position(position_uuid, 'BTCUDST', open_qty, now)
+                state.add_open_position(position_uuid, symbol, open_qty, now)
         elif state.get_position_open() == "True":
             if pvl[-1]['close'] < pvl[-1]['vwap'] or (entry_price - pvl[-1]['close']) / entry_price > 0.02 or (pvl[-3]['close'] - pvl[-1]['close']) / pvl[-3]['close'] > 0.04:
                 exit_price = get_avg_price(headers, symbol)
@@ -137,6 +138,8 @@ def main():
                 ))
                 trade_count += 1
                 state.set_position_open(False)
+                state.del_open_position(position_uuid)
+                position_uuid=''
         time.sleep(30)
 
 
